@@ -10,7 +10,7 @@
     "module": "nodenext",
     "target": "ES2022",
     "moduleResolution": "nodenext",
-    "types": [],
+    "types": ["node"],
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
@@ -43,5 +43,5 @@
     "skipLibCheck": true,
     "esModuleInterop": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "tests/**/*", "./drizzle.config.ts", "./vitest.integration.config.ts"],
 }

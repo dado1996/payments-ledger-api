@@ -8,9 +8,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test": "vitest run --exclude '**/*.integration.test.ts'",
+    "test:watch": "vitest --exclude '**/*.integration.test.ts'",
+    "test:integration": "vitest run --dir tests/integration --hook-timeout=60000 --test-timeout=60000"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +25,7 @@
   "type": "module",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@testcontainers/postgresql": "^12.0.4",
     "@types/node": "^26.0.0",
     "@vitest/coverage-v8": "^4.1.9",
     "drizzle-kit": "^0.31.10",
@@ -37,6 +38,7 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
-    "pg": "^8.22.0"
+    "postgres": "^3.4.9",
+    "uuid": "^14.0.1"
   }
 }
