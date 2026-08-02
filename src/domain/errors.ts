@@ -1,5 +1,5 @@
-import type { AccountId } from "./ledger.js";
-import type { Money } from "./money.js";
+import type { Money } from "./money/money.js";
+import type { AccountId } from "./shared/shared.js";
 
 export enum ErrorCodes {
   UNBALANCED_TRANSACTION = "UNBALANCED_TRANSACTION",

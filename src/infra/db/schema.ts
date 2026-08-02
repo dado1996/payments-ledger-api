@@ -9,14 +9,31 @@ import {
   varchar,
   bigint,
   index,
+  customType,
 } from "drizzle-orm/pg-core";
+import type { Currency } from "../../domain/money/money.js";
+
+export const currency = customType<{
+  data: Currency;
+  driverData: string;
+}>({
+  dataType() {
+    return "text";
+  },
+  toDriver(value: Currency): string {
+    return value;
+  },
+  fromDriver(value: unknown): Currency {
+    return value as Currency;
+  },
+});
 
 export const accounts = pgTable(
   "accounts",
   {
     id: uuid("id").primaryKey(),
     name: text("name").notNull(),
-    currency: text("currency").notNull(),
+    currency: currency("currency").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
@@ -29,7 +46,7 @@ export const transfers = pgTable(
   {
     id: uuid("id").primaryKey(),
     idempotencyKey: varchar("idempotency_key", { length: 255 }).notNull(),
-    currency: text("currency").notNull(),
+    currency: currency("currency").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     metadata: text("metadata"),
   },

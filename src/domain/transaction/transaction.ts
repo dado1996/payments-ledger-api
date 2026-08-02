@@ -1,32 +1,7 @@
-import { InvalidEntryError, UnbalancedTransactionError } from "./errors.js";
-import { Money, type Currency } from "./money.js";
-
-export type AccountId = string;
-
-export class Entry {
-  private readonly accountId: AccountId;
-  private readonly amount: bigint;
-
-  private constructor(accountId: string, amount: bigint) {
-    this.accountId = accountId;
-    this.amount = amount;
-    Object.freeze(this);
-  }
-
-  static create(accountId: string, amount: bigint): Entry {
-    if (!accountId) {
-      throw new InvalidEntryError("Invalid account", accountId);
-    }
-    if (amount === 0n) {
-      throw new InvalidEntryError("Entry amount must be non-zero", accountId);
-    }
-    return new Entry(accountId, amount);
-  }
-
-  toMoney(currency: Currency): Money {
-    return Money.fromMinorUnits(this.amount, currency);
-  }
-}
+import { Money, type Currency } from "../money/money.js";
+import type { TransactionSnapshot } from "./transaction-snapshot.js";
+import type { Entry } from "./entry.js";
+import { UnbalancedTransactionError } from "../errors.js";
 
 export class Transaction {
   private constructor(
@@ -36,6 +11,7 @@ export class Transaction {
     private readonly timestamp: Date,
     private readonly entries: Iterable<Entry>,
   ) {
+    this.currency = Transaction.toCurrency(currency);
     Object.freeze(this);
   }
 
@@ -62,6 +38,16 @@ export class Transaction {
     return new Transaction(id, idempotencyKey, currency, timestamp, entries);
   }
 
+  static reconstitute(
+    id: string,
+    idempotencyKey: string,
+    timestamp: Date,
+    currency: Currency,
+    entries: Entry[],
+  ) {
+    return new Transaction(id, idempotencyKey, currency, timestamp, entries);
+  }
+
   static assertBalance(entries: Entry[], currency: Currency): void {
     if (entries.length < 2)
       throw new UnbalancedTransactionError("Less than 2 entries", Money.zero(currency));
@@ -74,5 +60,19 @@ export class Transaction {
     if (!isZero) {
       throw new UnbalancedTransactionError("Entries are unbalanced", sumMoney);
     }
+  }
+
+  static toCurrency(currency: string): Currency {
+    return currency as Currency;
+  }
+
+  public toSnapshot(): TransactionSnapshot {
+    return {
+      id: this.id,
+      idempotencyKey: this.idempotencyKey,
+      currency: this.currency,
+      timestamp: this.timestamp,
+      entries: this.entries,
+    };
   }
 }
