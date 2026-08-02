@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { Entry, Transaction } from "../../src/domain/ledger.js";
-import { Money } from "../../src/domain/money.js";
+import { Money } from "../../src/domain/money/money.js";
 import { InvalidEntryError, UnbalancedTransactionError } from "../../src/domain/errors.js";
+import { Entry } from "../../src/domain/transaction/entry.js";
+import { Transaction } from "../../src/domain/transaction/transaction.js";
 
 describe("Entry tests", () => {
   it("should create an entry", () => {

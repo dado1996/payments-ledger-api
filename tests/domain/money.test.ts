@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Money } from "../../src/domain/money.js";
+import { Money } from "../../src/domain/money/money.js";
 
 describe("Money tests", () => {
   const money = (amount: bigint) => Money.fromMinorUnits(amount, "COP");

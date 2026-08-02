@@ -5,8 +5,8 @@ import {
   InvalidEntryError,
   UnbalancedTransactionError,
 } from "../../src/domain/errors.js";
-import type { AccountId } from "../../src/domain/ledger.js";
-import { Money } from "../../src/domain/money.js";
+import { Money } from "../../src/domain/money/money.js";
+import type { AccountId } from "../../src/domain/shared/shared.js";
 
 class TestDomainError extends DomainError {
   constructor(message: string, code: ErrorCodes) {

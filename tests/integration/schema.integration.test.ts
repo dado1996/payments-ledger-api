@@ -6,7 +6,7 @@ import { sql } from "drizzle-orm";
 import postgres from "postgres";
 import { v7 as uuidv7 } from "uuid";
 import * as schema from "../../src/infra/db/schema.js";
-import type { Currency } from "../../src/domain/money.js";
+import type { Currency } from "../../src/domain/money/money.js";
 import { seedValidEntry } from "../helpers/seedValid.js";
 
 interface PostgresDriverError {
