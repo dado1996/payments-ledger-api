@@ -8,7 +8,8 @@ export async function seedValidEntry(
 ) {
   const accountId = uuidv7();
   const transferId = uuidv7();
-  const entryId = uuidv7();
+  const entryId1 = uuidv7();
+  const entryId2 = uuidv7();
   const currency = "USD";
 
   await db.insert(schema.accounts).values({
@@ -24,12 +25,20 @@ export async function seedValidEntry(
     createdAt: new Date(),
   });
 
-  await db.insert(schema.entries).values({
-    id: entryId,
-    transferId,
-    accountId,
-    amount,
-  });
+  await db.insert(schema.entries).values([
+    {
+      id: entryId1,
+      transferId,
+      accountId,
+      amount: amount + 1n,
+    },
+    {
+      id: entryId2,
+      transferId,
+      accountId,
+      amount: -1n,
+    },
+  ]);
 
-  return { accountId, transferId, entryId };
+  return { accountId, transferId, entryId1, entryId2 };
 }

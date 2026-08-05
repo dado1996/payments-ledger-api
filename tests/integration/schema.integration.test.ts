@@ -8,33 +8,7 @@ import { v7 as uuidv7 } from "uuid";
 import * as schema from "../../src/infra/db/schema.js";
 import type { Currency } from "../../src/domain/money/money.js";
 import { seedValidEntry } from "../helpers/seedValid.js";
-
-interface PostgresDriverError {
-  code: string;
-  message: string;
-}
-
-interface DrizzleWrappedError {
-  cause: PostgresDriverError;
-}
-
-function isDrizzlePostgresError(error: unknown): error is DrizzleWrappedError {
-  if (typeof error !== "object" || error === null) return false;
-
-  // Extract and check the nested 'cause' property
-  const hasCause = "cause" in error;
-  if (!hasCause) return false;
-
-  const cause = (error as Record<string, unknown>).cause;
-  return (
-    typeof cause === "object" &&
-    cause !== null &&
-    "code" in cause &&
-    "message" in cause &&
-    typeof (cause as Record<string, unknown>).code === "string" &&
-    typeof (cause as Record<string, unknown>).message === "string"
-  );
-}
+import { isDrizzlePostgresError } from "../helpers/drizzleErrorWrapper.js";
 
 describe("Database Schema & Triggers Integration", () => {
   let container: StartedPostgreSqlContainer;
@@ -118,13 +92,13 @@ describe("Database Schema & Triggers Integration", () => {
   });
 
   it("append-only UPDATE: trigger rejects mutation with custom error message", async () => {
-    const { entryId } = await seedValidEntry(db);
+    const { entryId1 } = await seedValidEntry(db);
 
     try {
       await db
         .update(schema.entries)
         .set({ amount: 999n })
-        .where(sql`${schema.entries.id} = ${entryId}`);
+        .where(sql`${schema.entries.id} = ${entryId1}`);
 
       expect.fail("Database allowed an UPDATE operation on an append-only ledger table!");
     } catch (err: unknown) {
@@ -138,10 +112,10 @@ describe("Database Schema & Triggers Integration", () => {
   });
 
   it("append-only DELETE: trigger rejects mutation with custom error message", async () => {
-    const { entryId } = await seedValidEntry(db);
+    const { entryId1 } = await seedValidEntry(db);
 
     try {
-      await db.delete(schema.entries).where(sql`${schema.entries.id} = ${entryId}`);
+      await db.delete(schema.entries).where(sql`${schema.entries.id} = ${entryId1}`);
       expect.fail("Database allowed a DELETE operation on an append-only ledger table!");
     } catch (err: unknown) {
       if (isDrizzlePostgresError(err)) {
@@ -222,7 +196,9 @@ describe("Database Schema & Triggers Integration", () => {
     } catch (err: unknown) {
       if (isDrizzlePostgresError(err)) {
         expect(err.cause.code).toBe("23503");
-        expect(err.cause.message).toMatch(/foreign key constraint/i);
+        expect(err.cause.message).toMatch(
+          /update or delete on table "accounts" violates foreign key constraint "entries_account_id_accounts_id_fk" on table "entries"/i,
+        );
       } else {
         expect.fail("Thrown error was not a recognizable Drizzle Postgres exception");
       }
