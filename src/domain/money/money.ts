@@ -18,6 +18,10 @@ export class Money {
     return this.amount.toString();
   }
 
+  getCurrency(): Currency {
+    return this.currency;
+  }
+
   static zero(currency: Currency): Money {
     return new Money(0n, currency);
   }
