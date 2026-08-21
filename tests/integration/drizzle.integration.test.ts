@@ -5,13 +5,14 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import * as schema from "../../src/infra/db/schema.js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { sql } from "drizzle-orm";
-import { DrizzleTransactionRepository } from "../../src/infra/persistence/drizzle/drizzle-transaction-repository.js";
+import { DrizzleTransactionRepository } from "../../src/infra/persistence/drizzle/drizzleTransactionRepository.js";
 import { Transaction } from "../../src/domain/transaction/transaction.js";
 import { v7 as uuidv7 } from "uuid";
 import { Entry } from "../../src/domain/transaction/entry.js";
 import { isDrizzlePostgresError } from "../helpers/drizzleErrorWrapper.js";
 import { seedValidEntry } from "../helpers/seedValid.js";
 import { Money } from "../../src/domain/money/money.js";
+import { IdempotencyConflictError } from "../../src/domain/errors.js";
 
 describe("Drizzle Integration Tests", () => {
   let container: StartedPostgreSqlContainer;
@@ -87,6 +88,36 @@ describe("Drizzle Integration Tests", () => {
     const entriesSet = entriesAssert.map((entry) => entry.amount);
     expect(entriesSet).toContain(100n);
     expect(entriesSet).toContain(-100n);
+  });
+
+  it("fails to save transaction due to idempotency conflict", async () => {
+    const accountId = uuidv7();
+    await db.insert(schema.accounts).values({
+      id: accountId,
+      name: "account-name",
+      currency: "USD",
+      createdAt: new Date(),
+    });
+
+    const key = `key-${uuidv7()}`;
+    const firstEntries = [Entry.create(accountId, 2000n), Entry.create(accountId, -2000n)];
+    const firstTransaction = Transaction.create(uuidv7(), key, new Date(), "USD", firstEntries);
+    await drizzleTransactionRepository.saveTransaction(firstTransaction);
+
+    const secondEntries = [Entry.create(accountId, 1000n), Entry.create(accountId, -1000n)];
+    const secondTransaction = Transaction.create(uuidv7(), key, new Date(), "USD", secondEntries);
+    try {
+      await drizzleTransactionRepository.saveTransaction(secondTransaction);
+      expect.fail("The transaction should have failed due to idempotency conflict");
+    } catch (error: unknown) {
+      expect(error).toBeInstanceOf(IdempotencyConflictError);
+      if (error instanceof IdempotencyConflictError) {
+        expect(error.code).toBe("DUPLICATE_TRANSFER");
+        expect(error.message).toMatch(/The transaction already exists/i);
+      } else {
+        expect.fail("The error should have been an IdempotencyConflictError");
+      }
+    }
   });
 
   it("fails because accountId does not exist", async () => {
