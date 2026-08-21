@@ -1,4 +1,4 @@
-import type { EntrySnapshot } from "./entry-snapshot.js";
+import type { EntrySnapshot } from "./entrySnapshot.js";
 import { Money, type Currency } from "../money/money.js";
 import { InvalidEntryError } from "../errors.js";
 import { v7 as uuidv7 } from "uuid";

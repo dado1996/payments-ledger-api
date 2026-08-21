@@ -1,5 +1,5 @@
 import { Money, type Currency } from "../money/money.js";
-import type { TransactionSnapshot } from "./transaction-snapshot.js";
+import type { TransactionSnapshot } from "./transactionSnapshot.js";
 import type { Entry } from "./entry.js";
 import { UnbalancedTransactionError } from "../errors.js";
 

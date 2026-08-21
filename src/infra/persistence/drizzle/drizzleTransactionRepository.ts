@@ -1,35 +1,55 @@
 import { eq, sql } from "drizzle-orm";
-import type { TransactionRepository } from "../../../application/ports/transaction-repository.js";
+import type { TransactionRepository } from "../../../application/ports/transactionRepository.js";
 import { Money } from "../../../domain/money/money.js";
 import { Transaction } from "../../../domain/transaction/transaction.js";
-import { db } from "../../db/client.js";
 import { accounts, entries, transfers } from "../../db/schema.js";
 import { Entry } from "../../../domain/transaction/entry.js";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import * as schema from "../../db/schema.js";
+import { Account } from "../../../domain/account/account.js";
+import { IdempotencyConflictError } from "../../../domain/errors.js";
 
 export class DrizzleTransactionRepository implements TransactionRepository {
-  private readonly db = db;
+  constructor(private readonly db: PostgresJsDatabase<typeof schema>) {}
 
   public async saveTransaction(transaction: Transaction): Promise<void> {
     const snapshot = transaction.toSnapshot();
-    await this.db.transaction(async (tx) => {
-      await tx.insert(transfers).values({
-        id: snapshot.id,
-        idempotencyKey: snapshot.idempotencyKey,
-        currency: snapshot.currency,
-        createdAt: snapshot.timestamp,
+    try {
+      await this.db.transaction(async (tx) => {
+        await tx.insert(transfers).values({
+          id: snapshot.id,
+          idempotencyKey: snapshot.idempotencyKey,
+          currency: snapshot.currency,
+          createdAt: snapshot.timestamp,
+        });
+        await tx.insert(entries).values(
+          [...snapshot.entries].map((entry) => {
+            const entrySnapshot = entry.toSnapshot();
+            return {
+              id: entrySnapshot.id,
+              transferId: snapshot.id,
+              accountId: entrySnapshot.accountId,
+              amount: entrySnapshot.amount,
+              createdAt: new Date(),
+            };
+          }),
+        );
       });
-      await tx.insert(entries).values(
-        [...snapshot.entries].map((entry) => {
-          const entrySnapshot = entry.toSnapshot();
-          return {
-            id: entrySnapshot.id,
-            transferId: snapshot.id,
-            accountId: entrySnapshot.accountId,
-            amount: entrySnapshot.amount,
-          };
-        }),
-      );
-    });
+    } catch (error: unknown) {
+      const postgresError = this.extractPostgresError(error);
+
+      if (
+        postgresError?.code === "23505" &&
+        postgresError.constraint_name === "transfers_idempotency_key_unique"
+      ) {
+        throw new IdempotencyConflictError(
+          "The transaction already exists",
+          snapshot.idempotencyKey,
+        );
+      }
+
+      throw error;
+    }
   }
 
   public async findByIdempotencyKey(key: string): Promise<Transaction | null> {
@@ -81,6 +101,14 @@ export class DrizzleTransactionRepository implements TransactionRepository {
     );
   }
 
+  public async findAccountById(id: string): Promise<Account | null> {
+    const result = (await this.db.select().from(accounts).where(eq(accounts.id, id)))[0];
+
+    if (!result) return null;
+
+    return Account.reconstitute(result.id, result.name, result.currency, result.createdAt);
+  }
+
   public async getAccountBalance(accountId: string): Promise<Money> {
     const accountResult = (
       await this.db.select().from(accounts).where(eq(accounts.id, accountId))
@@ -121,5 +149,36 @@ export class DrizzleTransactionRepository implements TransactionRepository {
       .groupBy(transfers.currency);
 
     return entriesResult.map((row) => Money.fromMinorUnits(BigInt(row.balance), row.currency));
+  }
+
+  private extractPostgresError(
+    error: unknown,
+  ): { code: string | undefined; constraint_name: string | undefined } | null {
+    if (!error || typeof error !== "object") {
+      return null;
+    }
+
+    const candidate = error as {
+      code?: unknown;
+      constraint_name?: unknown;
+      cause: {
+        code?: unknown;
+        constraint_name?: unknown;
+      };
+    };
+
+    const postgresError = candidate.cause ?? candidate;
+
+    if (typeof postgresError !== "object" || postgresError === null) {
+      return null;
+    }
+
+    const result = postgresError;
+
+    return {
+      code: typeof result.code === "string" ? result.code : undefined,
+      constraint_name:
+        typeof result.constraint_name === "string" ? result.constraint_name : undefined,
+    };
   }
 }

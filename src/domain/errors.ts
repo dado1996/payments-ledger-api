@@ -4,6 +4,7 @@ import type { AccountId } from "./shared/shared.js";
 export enum ErrorCodes {
   UNBALANCED_TRANSACTION = "UNBALANCED_TRANSACTION",
   INVALID_ENTRY = "INVALID_ENTRY",
+  DUPLICATE_TRANSFER = "DUPLICATE_TRANSFER",
 }
 
 export abstract class DomainError extends Error {
@@ -30,5 +31,13 @@ export class InvalidEntryError extends DomainError {
   constructor(message: string, accountId?: AccountId) {
     super(message, ErrorCodes.INVALID_ENTRY);
     this.accountId = accountId;
+  }
+}
+
+export class IdempotencyConflictError extends DomainError {
+  public readonly idempotencyKey: string | undefined;
+  constructor(message: string, idempotencyKey?: string) {
+    super(message, ErrorCodes.DUPLICATE_TRANSFER);
+    this.idempotencyKey = idempotencyKey;
   }
 }
