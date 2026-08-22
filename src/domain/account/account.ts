@@ -23,6 +23,10 @@ export class Account {
     return new Account(id, name, currency, timestamp);
   }
 
+  public getCurrency(): Currency {
+    return this.currency;
+  }
+
   public toSnapshot(): AccountSnapshot {
     return {
       id: this.id,
