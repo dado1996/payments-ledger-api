@@ -2,12 +2,12 @@ import {
   AccountNotFoundError,
   CurrencyMismatchError,
   IdempotencyConflictError,
-} from "../../domain/errors.js";
-import { Entry } from "../../domain/transaction/entry.js";
-import { Transaction } from "../../domain/transaction/transaction.js";
-import type { TransactionRepository } from "../ports/transactionRepository.js";
+} from "../../../domain/errors.js";
+import { Entry } from "../../../domain/transaction/entry.js";
+import { Transaction } from "../../../domain/transaction/transaction.js";
+import type { TransactionRepository } from "../../ports/transactionRepository.js";
 import { v7 as uuidv7 } from "uuid";
-import type { CreateTransferDTO } from "./createTransferDTO.js";
+import type { CreateTransferDTO } from "../createTransfer/createTransferDTO.js";
 
 export class CreateTransfer {
   public constructor(private readonly transactionRepo: TransactionRepository) {}

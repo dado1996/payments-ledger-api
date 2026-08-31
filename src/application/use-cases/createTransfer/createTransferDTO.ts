@@ -1,4 +1,4 @@
-import type { Currency } from "../../domain/money/money.js";
+import type { Currency } from "../../../domain/money/money.js";
 
 export interface CreateTransferDTO {
   idempotencyKey: string;
