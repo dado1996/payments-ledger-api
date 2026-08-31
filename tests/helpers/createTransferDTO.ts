@@ -1,5 +1,5 @@
 import { v7 as uuidv7 } from "uuid";
-import type { CreateTransferDTO } from "../../src/application/use-cases/createTransferDTO.js";
+import type { CreateTransferDTO } from "../../src/application/use-cases/createTransfer/createTransferDTO.js";
 
 export function createTransferDTO(): CreateTransferDTO {
   return {
