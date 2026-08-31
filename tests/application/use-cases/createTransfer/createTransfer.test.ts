@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CreateTransfer } from "../../../src/application/use-cases/createTransfer.js";
-import type { TransactionRepository } from "../../../src/application/ports/transactionRepository.js";
-import { Transaction } from "../../../src/domain/transaction/transaction.js";
+import { CreateTransfer } from "../../../../src/application/use-cases/createTransfer/createTransfer.js";
+import type { TransactionRepository } from "../../../../src/application/ports/transactionRepository.js";
+import { Transaction } from "../../../../src/domain/transaction/transaction.js";
 import { v7 as uuidv7 } from "uuid";
-import { Account } from "../../../src/domain/account/account.js";
+import { Account } from "../../../../src/domain/account/account.js";
 import {
   AccountNotFoundError,
   CurrencyMismatchError,
   IdempotencyConflictError,
-} from "../../../src/domain/errors.js";
-import { Entry } from "../../../src/domain/transaction/entry.js";
-import { createTransferDTO } from "../../helpers/createTransferDTO.js";
+} from "../../../../src/domain/errors.js";
+import { Entry } from "../../../../src/domain/transaction/entry.js";
+import { createTransferDTO } from "../../../helpers/createTransferDTO.js";
 
 describe("Application create transfer", () => {
   let createTransferUsecase: CreateTransfer;
@@ -25,6 +25,7 @@ describe("Application create transfer", () => {
       getAccountBalance: vi.fn(),
       getEntriesForAccount: vi.fn(),
       getSystemBalance: vi.fn(),
+      saveAccount: vi.fn(),
     } satisfies TransactionRepository;
     createTransferUsecase = new CreateTransfer(repo);
   });

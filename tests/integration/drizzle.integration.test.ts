@@ -13,6 +13,7 @@ import { isDrizzlePostgresError } from "../helpers/drizzleErrorWrapper.js";
 import { seedValidEntry } from "../helpers/seedValid.js";
 import { Money } from "../../src/domain/money/money.js";
 import { IdempotencyConflictError } from "../../src/domain/errors.js";
+import { Account } from "../../src/domain/account/account.js";
 
 describe("Drizzle Integration Tests", () => {
   let container: StartedPostgreSqlContainer;
@@ -58,10 +59,10 @@ describe("Drizzle Integration Tests", () => {
     });
     const transferId = uuidv7();
     const idempotencyKey = `key-${uuidv7()}`;
-    const timestamp = new Date();
+    const createdAt = new Date();
     const currency = "USD";
     await drizzleTransactionRepository.saveTransaction(
-      Transaction.create(transferId, `${idempotencyKey}`, timestamp, currency, [
+      Transaction.create(transferId, `${idempotencyKey}`, createdAt, currency, [
         Entry.create(accountId, 100n),
         Entry.create(accountId, -100n),
       ]),
@@ -73,7 +74,7 @@ describe("Drizzle Integration Tests", () => {
       .where(sql`${schema.transfers.id}=${transferId}`);
     expect(transactionAssert).toHaveLength(1);
     expect(transactionAssert[0]?.idempotencyKey).toBe(idempotencyKey);
-    expect(transactionAssert[0]?.createdAt).toStrictEqual(timestamp);
+    expect(transactionAssert[0]?.createdAt).toStrictEqual(createdAt);
     expect(transactionAssert[0]?.currency).toBe(currency);
 
     const entriesAssert = await db
@@ -155,12 +156,12 @@ describe("Drizzle Integration Tests", () => {
   it("should find a transaction based on an idempotency key", async () => {
     const id = uuidv7();
     const idempotencyKey = `key-${uuidv7()}`;
-    const timestamp = new Date();
+    const createdAt = new Date();
     const { accountId } = await seedValidEntry(db);
     await db.insert(schema.transfers).values({
       id: id,
       idempotencyKey,
-      createdAt: timestamp,
+      createdAt,
       currency: "COP",
     });
     await db.insert(schema.entries).values([
@@ -180,7 +181,7 @@ describe("Drizzle Integration Tests", () => {
     const transferAssert = await drizzleTransactionRepository.findByIdempotencyKey(idempotencyKey);
     expect(transferAssert).not.toBeNull();
     expect(transferAssert?.getCurrency()).toBe("COP");
-    expect(transferAssert?.getTimestamp()).toStrictEqual(timestamp);
+    expect(transferAssert?.getTimestamp()).toStrictEqual(createdAt);
     expect(transferAssert?.getEntries()).toHaveLength(2);
   });
 
@@ -194,12 +195,12 @@ describe("Drizzle Integration Tests", () => {
   it("should throw because of only 1 entry", async () => {
     const id = uuidv7();
     const idempotencyKey = `key-${uuidv7()}`;
-    const timestamp = new Date();
+    const createdAt = new Date();
     const { accountId } = await seedValidEntry(db);
     await db.insert(schema.transfers).values({
       id: id,
       idempotencyKey,
-      createdAt: timestamp,
+      createdAt,
       currency: "COP",
     });
     await db.insert(schema.entries).values([
@@ -400,5 +401,23 @@ describe("Drizzle Integration Tests", () => {
     expect(usdMoney?.toMinorUnits()).toBe("0");
     expect(gbpMoney?.toMinorUnits()).toBe("999");
     expect(copMoney?.toMinorUnits()).toBe("339081");
+  });
+
+  it("should save account", async () => {
+    const id = uuidv7();
+    const name = "account-name";
+    const currency = "USD";
+    const createdAt = new Date();
+    const account = Account.create(id, name, currency, createdAt);
+    await drizzleTransactionRepository.saveAccount(account);
+
+    const accountAssert = await drizzleTransactionRepository.findAccountById(id);
+    expect(accountAssert).not.toBeNull();
+    if (accountAssert) {
+      const snapshot = accountAssert.toSnapshot();
+      expect(snapshot.name).toBe(name);
+      expect(snapshot.createdAt).toEqual(createdAt);
+      expect(snapshot.currency).toBe(currency);
+    }
   });
 });
