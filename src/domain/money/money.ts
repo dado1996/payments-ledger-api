@@ -1,4 +1,5 @@
-export type Currency = "USD" | "EUR" | "GBP" | "COP";
+export const CURRENCY = ["USD", "EUR", "GBP", "COP"] as const;
+export type Currency = (typeof CURRENCY)[number];
 
 export class Money {
   private readonly amount: bigint;
