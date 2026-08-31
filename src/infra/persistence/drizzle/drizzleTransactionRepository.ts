@@ -20,7 +20,7 @@ export class DrizzleTransactionRepository implements TransactionRepository {
           id: snapshot.id,
           idempotencyKey: snapshot.idempotencyKey,
           currency: snapshot.currency,
-          createdAt: snapshot.timestamp,
+          createdAt: snapshot.createdAt,
         });
         await tx.insert(entries).values(
           [...snapshot.entries].map((entry) => {
@@ -149,6 +149,16 @@ export class DrizzleTransactionRepository implements TransactionRepository {
       .groupBy(transfers.currency);
 
     return entriesResult.map((row) => Money.fromMinorUnits(BigInt(row.balance), row.currency));
+  }
+
+  public async saveAccount(account: Account): Promise<void> {
+    const snapshot = account.toSnapshot();
+    await this.db.insert(schema.accounts).values({
+      id: snapshot.id,
+      name: snapshot.name,
+      currency: snapshot.currency,
+      createdAt: snapshot.createdAt,
+    });
   }
 
   private extractPostgresError(

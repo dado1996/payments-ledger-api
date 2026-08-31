@@ -5,6 +5,6 @@ export interface TransactionSnapshot {
   id: string;
   idempotencyKey: string;
   currency: Currency;
-  timestamp: Date;
+  createdAt: Date;
   entries: Iterable<Entry>;
 }

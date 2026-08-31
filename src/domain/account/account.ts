@@ -5,22 +5,22 @@ export class Account {
   private readonly id: string;
   private readonly name: string;
   private readonly currency: Currency;
-  private readonly timestamp: Date;
+  private readonly createdAt: Date;
 
-  private constructor(id: string, name: string, currency: Currency, timestamp: Date) {
+  private constructor(id: string, name: string, currency: Currency, createdAt: Date) {
     this.id = id;
     this.name = name;
     this.currency = currency;
-    this.timestamp = timestamp;
+    this.createdAt = createdAt;
     Object.freeze(this);
   }
 
-  public static create(id: string, name: string, currency: Currency, timestamp: Date) {
-    return new Account(id, name, currency, timestamp);
+  public static create(id: string, name: string, currency: Currency, createdAt: Date) {
+    return new Account(id, name, currency, createdAt);
   }
 
-  public static reconstitute(id: string, name: string, currency: Currency, timestamp: Date) {
-    return new Account(id, name, currency, timestamp);
+  public static reconstitute(id: string, name: string, currency: Currency, createdAt: Date) {
+    return new Account(id, name, currency, createdAt);
   }
 
   public getCurrency(): Currency {
@@ -32,7 +32,7 @@ export class Account {
       id: this.id,
       name: this.name,
       currency: this.currency,
-      timestamp: this.timestamp,
+      createdAt: this.createdAt,
     };
   }
 }

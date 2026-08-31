@@ -8,7 +8,7 @@ export class Transaction {
     private readonly id: string,
     private readonly idempotencyKey: string,
     private readonly currency: Currency,
-    private readonly timestamp: Date,
+    private readonly createdAt: Date,
     private readonly entries: Iterable<Entry>,
   ) {
     this.currency = Transaction.toCurrency(currency);
@@ -20,7 +20,7 @@ export class Transaction {
   }
 
   public getTimestamp(): Date {
-    return this.timestamp;
+    return this.createdAt;
   }
 
   public getEntries(): Iterable<Entry> {
@@ -30,22 +30,22 @@ export class Transaction {
   static create(
     id: string,
     idempotencyKey: string,
-    timestamp: Date,
+    createdAt: Date,
     currency: Currency,
     entries: Entry[],
   ): Transaction {
     Transaction.assertBalance(entries, currency);
-    return new Transaction(id, idempotencyKey, currency, timestamp, entries);
+    return new Transaction(id, idempotencyKey, currency, createdAt, entries);
   }
 
   static reconstitute(
     id: string,
     idempotencyKey: string,
-    timestamp: Date,
+    createdAt: Date,
     currency: Currency,
     entries: Entry[],
   ) {
-    return new Transaction(id, idempotencyKey, currency, timestamp, entries);
+    return new Transaction(id, idempotencyKey, currency, createdAt, entries);
   }
 
   static assertBalance(entries: Entry[], currency: Currency): void {
@@ -71,7 +71,7 @@ export class Transaction {
       id: this.id,
       idempotencyKey: this.idempotencyKey,
       currency: this.currency,
-      timestamp: this.timestamp,
+      createdAt: this.createdAt,
       entries: this.entries,
     };
   }
