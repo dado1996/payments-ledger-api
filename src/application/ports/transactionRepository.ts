@@ -17,4 +17,6 @@ export interface TransactionRepository {
   getEntriesForAccount(accountId: string): Promise<Entry[]>;
 
   getSystemBalance(): Promise<Money[]>;
+
+  saveAccount(account: Account): Promise<void>;
 }
