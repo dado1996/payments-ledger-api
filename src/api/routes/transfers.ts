@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { App, AppDependencies } from "../app.js";
 import { CURRENCY } from "../../domain/money/money.js";
+import { toTransferResponse } from "./route.js";
 
 const TransferHeadersSchema = z.object({
   "idempotency-key": z.string().min(5),
@@ -18,7 +19,7 @@ const TransferBodySchema = z.object({
 });
 
 const TransferParamsSchema = z.object({
-  id: z.uuidv7(),
+  id: z.uuid(),
 });
 
 export function registerTransferRoutes(app: App, deps: AppDependencies) {
@@ -37,17 +38,7 @@ export function registerTransferRoutes(app: App, deps: AppDependencies) {
         idempotencyKey,
       });
 
-      const snapshot = transaction.toSnapshot();
-      const response = {
-        id: snapshot.id,
-        idempotencyKey: snapshot.idempotencyKey,
-        currency: snapshot.currency,
-        createdAt: snapshot.createdAt,
-        entries: [...snapshot.entries].map((entry) => ({
-          accountId: entry.toSnapshot().accountId,
-          amount: entry.toSnapshot().amount.toString(),
-        })),
-      };
+      const response = toTransferResponse(transaction);
 
       return reply.status(201).send(response);
     },
@@ -56,7 +47,7 @@ export function registerTransferRoutes(app: App, deps: AppDependencies) {
   app.get(
     "/transfers/:id",
     {
-      schema: { headers: TransferHeadersSchema, params: TransferParamsSchema },
+      schema: { params: TransferParamsSchema },
     },
     async (request, reply) => {
       const { id } = request.params;
@@ -68,7 +59,7 @@ export function registerTransferRoutes(app: App, deps: AppDependencies) {
         });
       }
 
-      const response = {};
+      const response = toTransferResponse(result);
 
       return reply.status(200).send(response);
     },

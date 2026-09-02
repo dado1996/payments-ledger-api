@@ -14,6 +14,7 @@ import { seedValidEntry } from "../helpers/seedValid.js";
 import { Money } from "../../src/domain/money/money.js";
 import { IdempotencyConflictError } from "../../src/domain/errors.js";
 import { Account } from "../../src/domain/account/account.js";
+import { uuid } from "zod";
 
 describe("Drizzle Integration Tests", () => {
   let container: StartedPostgreSqlContainer;
@@ -418,6 +419,30 @@ describe("Drizzle Integration Tests", () => {
       expect(snapshot.name).toBe(name);
       expect(snapshot.createdAt).toEqual(createdAt);
       expect(snapshot.currency).toBe(currency);
+    }
+  });
+
+  it("should save transaction", async () => {
+    const accountId = uuidv7();
+    const id = uuidv7();
+    const idempotencyKey = `key-${uuidv7()}`;
+    const createdAt = new Date();
+    const currency = "USD";
+    const entries = [Entry.create(accountId, 1000n), Entry.create(accountId, -1000n)];
+    const transaction = Transaction.create(id, idempotencyKey, createdAt, currency, entries);
+    const account = Account.create(accountId, "account-name", "USD", new Date());
+    await drizzleTransactionRepository.saveAccount(account);
+    await drizzleTransactionRepository.saveTransaction(transaction);
+
+    const transactionAssert = await drizzleTransactionRepository.findTransferById(id);
+    expect(transactionAssert).not.toBeNull();
+    if (transactionAssert instanceof Transaction) {
+      const snapshot = transactionAssert.toSnapshot();
+      expect(snapshot.id).toBe(id);
+      expect(snapshot.idempotencyKey).toBe(idempotencyKey);
+      expect(snapshot.createdAt).toEqual(createdAt);
+      expect(snapshot.currency).toBe(currency);
+      expect(snapshot.entries).toHaveLength(entries.length);
     }
   });
 });

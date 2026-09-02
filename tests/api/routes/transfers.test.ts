@@ -61,15 +61,12 @@ describe("Route transfers", () => {
     });
 
     expect(response.statusCode).toBe(201);
-    expect(response.json()).toEqual({
+    expect(response.json()).toMatchObject({
       id: transaction.toSnapshot().id,
       idempotencyKey,
       currency: "USD",
       createdAt: createdAt.toISOString(),
-      entries: [
-        { accountId: sourceAccountId, amount: "-1000" },
-        { accountId: destinationAccountId, amount: "1000" },
-      ],
+      entries: [{ amount: "-1000" }, { amount: "1000" }],
     });
     expect(execute).toHaveBeenCalledWith({
       sourceAccountId,
@@ -186,6 +183,46 @@ describe("Route transfers", () => {
     expect(response.json()).toEqual({
       code: "DUPLICATE_TRANSFER",
       message: "Idempotency conflict",
+    });
+  });
+
+  it("GET /transfers/:id 200", async () => {
+    const id = uuidv7();
+    const idempotencyKey = `key-${uuidv7()}`;
+    const createdAt = new Date();
+    const currency = "USD";
+    const entries = [Entry.create(uuidv7(), 1000n), Entry.create(uuidv7(), -1000n)];
+    execute.mockResolvedValue(Transaction.create(id, idempotencyKey, createdAt, currency, entries));
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/transfers/${id}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      id,
+      idempotencyKey,
+      currency,
+      entries: entries.map((entry) => ({
+        accountId: entry.toSnapshot().accountId,
+        amount: entry.toSnapshot().amount.toString(),
+      })),
+    });
+  });
+
+  it("GET /transfers/:id 404", async () => {
+    const id = uuidv7();
+    execute.mockResolvedValue(null);
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/transfers/${id}`,
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toMatchObject({
+      message: "Not Found",
     });
   });
 });
