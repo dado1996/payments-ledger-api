@@ -14,7 +14,6 @@ import { seedValidEntry } from "../helpers/seedValid.js";
 import { Money } from "../../src/domain/money/money.js";
 import { IdempotencyConflictError } from "../../src/domain/errors.js";
 import { Account } from "../../src/domain/account/account.js";
-import { uuid } from "zod";
 
 describe("Drizzle Integration Tests", () => {
   let container: StartedPostgreSqlContainer;
@@ -444,5 +443,31 @@ describe("Drizzle Integration Tests", () => {
       expect(snapshot.currency).toBe(currency);
       expect(snapshot.entries).toHaveLength(entries.length);
     }
+  });
+
+  it("should return the account", async () => {
+    const accountId = uuidv7();
+    const name = "account-name";
+    const currency = "USD";
+    const createdAt = new Date();
+    await drizzleTransactionRepository.saveAccount(
+      Account.create(accountId, name, currency, createdAt),
+    );
+
+    const accountAssert = await drizzleTransactionRepository.findAccountById(accountId);
+    expect(accountAssert).not.toBeNull();
+    if (accountAssert instanceof Account) {
+      const snapshot = accountAssert.toSnapshot();
+      expect(snapshot.name).toBe(name);
+      expect(snapshot.currency).toBe(currency);
+      expect(snapshot.createdAt).toEqual(createdAt);
+    }
+  });
+
+  it("should return null", async () => {
+    const accountId = uuidv7();
+
+    const accountAssert = await drizzleTransactionRepository.findAccountById(accountId);
+    expect(accountAssert).toBeNull();
   });
 });

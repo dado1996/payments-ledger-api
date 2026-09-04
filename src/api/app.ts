@@ -7,7 +7,7 @@ import {
   type ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import { registerTransferRoutes } from "./routes/transfers.js";
-import type { GetAccountBalance } from "../application/use-cases/getAccountBalance/getAccountBalance.js";
+import type { GetAccount } from "../application/use-cases/getAccount/getAccount.js";
 import type { GetTransfer } from "../application/use-cases/getTransfer/getTransfer.js";
 import type { GetAccountEntries } from "../application/use-cases/getAccountEntries/getAccountEntries.js";
 import type { CreateTransfer } from "../application/use-cases/createTransfer/createTransfer.js";
@@ -18,7 +18,7 @@ import { registerAccountRoutes } from "./routes/accounts.js";
 export interface AppDependencies {
   logger?: boolean;
   createTransfer: CreateTransfer;
-  getAccountBalance: GetAccountBalance;
+  getAccount: GetAccount;
   getTransfer: GetTransfer;
   getAccountEntries: GetAccountEntries;
   getSystemBalance: GetSystemBalance;

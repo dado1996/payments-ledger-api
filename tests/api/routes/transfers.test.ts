@@ -10,7 +10,7 @@ import {
   IdempotencyConflictError,
 } from "../../../src/domain/errors.js";
 import type { Currency } from "../../../src/domain/money/money.js";
-import type { GetAccountBalance } from "../../../src/application/use-cases/getAccountBalance/getAccountBalance.js";
+import type { GetAccount } from "../../../src/application/use-cases/getAccount/getAccount.js";
 import type { GetAccountEntries } from "../../../src/application/use-cases/getAccountEntries/getAccountEntries.js";
 import type { GetTransfer } from "../../../src/application/use-cases/getTransfer/getTransfer.js";
 import type { GetSystemBalance } from "../../../src/application/use-cases/getSystemBalance/getSystemBalance.js";
@@ -25,7 +25,7 @@ describe("Route transfers", () => {
     app = buildApp({
       logger: false,
       createTransfer: { execute } as unknown as CreateTransfer,
-      getAccountBalance: { execute } as unknown as GetAccountBalance,
+      getAccount: { execute } as unknown as GetAccount,
       getAccountEntries: { execute } as unknown as GetAccountEntries,
       getTransfer: { execute } as unknown as GetTransfer,
       getSystemBalance: { execute } as unknown as GetSystemBalance,

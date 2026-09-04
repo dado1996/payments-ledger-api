@@ -3,7 +3,7 @@ import { buildApp, type App } from "../../../src/api/app.js";
 import type { CreateAccount } from "../../../src/application/use-cases/createAccount/createAccount.js";
 import type { GetSystemBalance } from "../../../src/application/use-cases/getSystemBalance/getSystemBalance.js";
 import type { CreateTransfer } from "../../../src/application/use-cases/createTransfer/createTransfer.js";
-import type { GetAccountBalance } from "../../../src/application/use-cases/getAccountBalance/getAccountBalance.js";
+import type { GetAccount } from "../../../src/application/use-cases/getAccount/getAccount.js";
 import type { GetTransfer } from "../../../src/application/use-cases/getTransfer/getTransfer.js";
 import type { GetAccountEntries } from "../../../src/application/use-cases/getAccountEntries/getAccountEntries.js";
 import { v7 as uuidv7 } from "uuid";
@@ -21,7 +21,7 @@ describe("Route accounts", () => {
       createAccount: { execute } as unknown as CreateAccount,
       getSystemBalance: { execute } as unknown as GetSystemBalance,
       createTransfer: { execute } as unknown as CreateTransfer,
-      getAccountBalance: { execute } as unknown as GetAccountBalance,
+      getAccount: { execute } as unknown as GetAccount,
       getTransfer: { execute } as unknown as GetTransfer,
       getAccountEntries: { execute } as unknown as GetAccountEntries,
     });
@@ -49,6 +49,8 @@ describe("Route accounts", () => {
     expect(response.json()).toMatchObject({
       id: accountId,
       name: accountName,
+      balance: balance.toMinorUnits(),
+      currency: accountCurrency,
     });
   });
 

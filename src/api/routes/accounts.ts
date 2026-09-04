@@ -3,7 +3,7 @@ import type { App, AppDependencies } from "../app.js";
 import { CURRENCY } from "../../domain/money/money.js";
 
 const AccountParamsSchema = z.object({
-  id: z.uuidv7(),
+  id: z.uuid(),
 });
 
 const AccountBodySchema = z.object({
@@ -21,7 +21,7 @@ export function registerAccountRoutes(app: App, deps: AppDependencies) {
     },
     async (request, reply) => {
       const { id } = request.params;
-      const accountResponse = await deps.getAccountBalance.execute({ id });
+      const accountResponse = await deps.getAccount.execute({ id });
 
       if (!accountResponse) {
         return reply.status(404).send({
@@ -30,10 +30,13 @@ export function registerAccountRoutes(app: App, deps: AppDependencies) {
       }
 
       const { account, balance } = accountResponse;
+      const snapshot = account.toSnapshot();
       const response = {
-        id: account.toSnapshot().id,
-        name: account.toSnapshot().name,
+        id: snapshot.id,
+        name: snapshot.name,
+        currency: balance.getCurrency(),
         balance: balance.toMinorUnits(),
+        createdAt: snapshot.createdAt,
       };
 
       return reply.status(200).send(response);

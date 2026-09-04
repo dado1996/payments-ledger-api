@@ -1,10 +1,10 @@
 import type { TransactionRepository } from "../../ports/transactionRepository.js";
-import type { GetAccountBalanceDTO } from "../getAccountBalance/getAccountBalanceDTO.js";
+import type { GetAccountDTO, GetAccountResultDTO } from "./getAccountDTO.js";
 
-export class GetAccountBalance {
+export class GetAccount {
   public constructor(private readonly transactionRepo: TransactionRepository) {}
 
-  public async execute(command: GetAccountBalanceDTO) {
+  public async execute(command: GetAccountDTO): Promise<GetAccountResultDTO | null> {
     const resultAccount = await this.transactionRepo.findAccountById(command.id);
     if (!resultAccount) {
       return null;
