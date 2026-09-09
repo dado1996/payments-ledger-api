@@ -14,6 +14,7 @@ import type { CreateTransfer } from "../application/use-cases/createTransfer/cre
 import type { GetSystemBalance } from "../application/use-cases/getSystemBalance/getSystemBalance.js";
 import type { CreateAccount } from "../application/use-cases/createAccount/createAccount.js";
 import { registerAccountRoutes } from "./routes/accounts.js";
+import { registerSystemRoutes } from "./routes/system.js";
 
 export interface AppDependencies {
   logger?: boolean;
@@ -74,6 +75,7 @@ export function buildApp(deps: AppDependencies) {
 
   registerTransferRoutes(app, deps);
   registerAccountRoutes(app, deps);
+  registerSystemRoutes(app, deps);
 
   return app;
 }

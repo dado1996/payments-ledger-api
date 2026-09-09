@@ -53,13 +53,7 @@ export function registerAccountRoutes(app: App, deps: AppDependencies) {
     async (request, reply) => {
       const { id } = request.params;
       const accountEntries = await deps.getAccountEntries.execute({ id });
-
-      const response = accountEntries.map((entry) => ({
-        id: entry.toSnapshot().id,
-        amount: entry.toSnapshot().amount.toString(),
-      }));
-
-      return reply.status(200).send(response);
+      return reply.status(200).send({ entries: accountEntries });
     },
   );
 
