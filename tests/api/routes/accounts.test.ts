@@ -9,6 +9,7 @@ import type { GetAccountEntries } from "../../../src/application/use-cases/getAc
 import { v7 as uuidv7 } from "uuid";
 import { Account } from "../../../src/domain/account/account.js";
 import { Money, type Currency } from "../../../src/domain/money/money.js";
+import { AccountNotFoundError } from "../../../src/domain/errors.js";
 
 describe("Route accounts", () => {
   let app: App;
@@ -135,5 +136,50 @@ describe("Route accounts", () => {
       message: "body/name Too small: expected string to have >=5 characters",
     });
     expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("GET /accounts/:id/entries 200", async () => {
+    const id = uuidv7();
+    const mockedResponse = [
+      { accountId: uuidv7(), amount: "1000" },
+      { accountId: uuidv7(), amount: "1000" },
+      { accountId: uuidv7(), amount: "-1000" },
+      { accountId: uuidv7(), amount: "1000" },
+      { accountId: uuidv7(), amount: "1000" },
+    ];
+    execute.mockResolvedValue(mockedResponse);
+    const response = await app.inject({
+      method: "GET",
+      url: `/accounts/${id}/entries`,
+    });
+
+    expect(execute).toHaveBeenCalled();
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toHaveProperty("entries");
+  });
+
+  it("GET /accounts/:id/entries 200 empty", async () => {
+    const id = uuidv7();
+    execute.mockResolvedValue([]);
+    const entriesAssert = await app.inject({
+      method: "GET",
+      url: `/accounts/${id}/entries`,
+    });
+
+    expect(execute).toHaveBeenCalled();
+    expect(entriesAssert.statusCode).toBe(200);
+  });
+
+  it("GET /accounts/:id/entries 404", async () => {
+    const id = uuidv7();
+    execute.mockRejectedValue(new AccountNotFoundError("No account", id));
+    const response = await app.inject({
+      method: "GET",
+      url: `/accounts/${id}/entries`,
+    });
+
+    expect(execute).toHaveBeenCalled();
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toHaveProperty("message", "No account");
   });
 });
