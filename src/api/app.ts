@@ -71,7 +71,7 @@ export function buildApp(deps: AppDependencies) {
   });
 
   app.get("/health", (_request, reply) => {
-    return reply.send({ status: "ok2" });
+    return reply.send({ status: "ok" });
   });
 
   registerTransferRoutes(app, deps);
