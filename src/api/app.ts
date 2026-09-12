@@ -29,6 +29,7 @@ export interface AppDependencies {
 export function buildApp(deps: AppDependencies) {
   const app = Fastify({
     logger: deps.logger ?? true,
+    forceCloseConnections: true,
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);
@@ -70,7 +71,7 @@ export function buildApp(deps: AppDependencies) {
   });
 
   app.get("/health", (_request, reply) => {
-    return reply.send({ status: "ok" });
+    return reply.send({ status: "ok2" });
   });
 
   registerTransferRoutes(app, deps);
