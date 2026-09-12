@@ -1,9 +1,11 @@
 import pluginJs from "@eslint/js";
-import { defineConfig } from "eslint/config";
+import { defineConfig, globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
 import configPrettier from "eslint-config-prettier";
 
 export default defineConfig(
+  globalIgnores(["coverage/**", "dist/**"]),
+
   // 1. @eslint/js recommended rules
   pluginJs.configs.recommended,
 
