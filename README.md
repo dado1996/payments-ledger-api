@@ -2,7 +2,7 @@
 
 A Fastify-based ledger service for creating accounts, moving funds between them, and reconciling the system balance across multiple currencies.
 
-![CI](https://github.com/you/payments-ledger-api/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/dado1996/payments-ledger-api/actions/workflows/ci.yml/badge.svg)
 
 ## Overview
 
