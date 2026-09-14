@@ -7,6 +7,23 @@ const TransferHeadersSchema = z.object({
   "idempotency-key": z.string().min(5),
 });
 
+const TransferResponseSchema = z.object({
+  id: z.uuid(),
+  idempotencyKey: z.string(),
+  currency: z.enum(CURRENCY),
+  createdAt: z.date(),
+  entries: z.array(
+    z.object({
+      accountId: z.uuid(),
+      amount: z.string(),
+    }),
+  ),
+});
+
+const TransferErrorResponseSchema = z.object({
+  message: z.literal("Not Found"),
+});
+
 const TransferBodySchema = z.object({
   sourceAccountId: z.uuidv7(),
   destinationAccountId: z.uuidv7(),
@@ -25,7 +42,18 @@ const TransferParamsSchema = z.object({
 export function registerTransferRoutes(app: App, deps: AppDependencies) {
   app.post(
     "/transfers",
-    { schema: { headers: TransferHeadersSchema, body: TransferBodySchema } },
+    {
+      schema: {
+        headers: TransferHeadersSchema,
+        body: TransferBodySchema,
+        tags: ["transfers"],
+        summary: "Create a transfer",
+        description: "Creates an idempotent double-entry transfer between two ledger accounts.",
+        response: {
+          201: TransferResponseSchema,
+        },
+      },
+    },
     async (request, reply) => {
       const { sourceAccountId, destinationAccountId, amount, currency } = request.body;
       const idempotencyKey = request.headers["idempotency-key"];
@@ -47,7 +75,17 @@ export function registerTransferRoutes(app: App, deps: AppDependencies) {
   app.get(
     "/transfers/:id",
     {
-      schema: { params: TransferParamsSchema },
+      schema: {
+        tags: ["transfers"],
+        summary: "Searches for a transfer by id",
+        description:
+          "Finds the transfer associated by the id. If it doesn't exist or the id is invalid, returns 404",
+        params: TransferParamsSchema,
+        response: {
+          200: TransferResponseSchema,
+          404: TransferErrorResponseSchema,
+        },
+      },
     },
     async (request, reply) => {
       const { id } = request.params;

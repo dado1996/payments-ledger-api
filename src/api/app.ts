@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import { DomainError, ErrorCodes } from "../domain/errors.js";
 import {
   hasZodFastifySchemaValidationErrors,
+  jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
   type ZodTypeProvider,
@@ -15,6 +16,9 @@ import type { GetSystemBalance } from "../application/use-cases/getSystemBalance
 import type { CreateAccount } from "../application/use-cases/createAccount/createAccount.js";
 import { registerAccountRoutes } from "./routes/accounts.js";
 import { registerSystemRoutes } from "./routes/system.js";
+import swagger from "@fastify/swagger";
+import swaggerUi from "@fastify/swagger-ui";
+import { z } from "zod";
 
 export interface AppDependencies {
   logger?: boolean;
@@ -26,6 +30,10 @@ export interface AppDependencies {
   createAccount: CreateAccount;
 }
 
+const HealthResponseSchema = z.object({
+  status: z.literal("ok"),
+});
+
 export function buildApp(deps: AppDependencies) {
   const app = Fastify({
     logger: deps.logger ?? true,
@@ -34,6 +42,45 @@ export function buildApp(deps: AppDependencies) {
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
+
+  app.register(swagger, {
+    openapi: {
+      openapi: "3.1.0",
+      info: {
+        title: "Payments Ledger API",
+        description:
+          "A double-entry payments ledger with idempotent transfers and per-currency reconciliation.",
+        version: "1.0.0",
+      },
+      tags: [
+        {
+          name: "health",
+          description: "Service health",
+        },
+        {
+          name: "accounts",
+          description: "Ledger accounts",
+        },
+        {
+          name: "transfers",
+          description: "Money transfers",
+        },
+        {
+          name: "reconciliation",
+          description: "Ledger reconciliation",
+        },
+      ],
+    },
+    transform: jsonSchemaTransform,
+  });
+
+  app.register(swaggerUi, {
+    routePrefix: "/docs",
+    uiConfig: {
+      docExpansion: "full",
+      deepLinking: false,
+    },
+  });
 
   app.setErrorHandler((error, request, reply) => {
     request.log.error(error);
@@ -70,13 +117,28 @@ export function buildApp(deps: AppDependencies) {
     });
   });
 
-  app.get("/health", (_request, reply) => {
-    return reply.send({ status: "ok" });
-  });
+  app.register((instance) => {
+    instance.get(
+      "/health",
+      {
+        schema: {
+          tags: ["health"],
+          summary: "Checks status of the API",
+          description: "Returns ok if the service is up and running",
+          response: {
+            200: HealthResponseSchema,
+          },
+        },
+      },
+      (_request, reply) => {
+        return reply.send({ status: "ok" });
+      },
+    );
 
-  registerTransferRoutes(app, deps);
-  registerAccountRoutes(app, deps);
-  registerSystemRoutes(app, deps);
+    registerTransferRoutes(instance, deps);
+    registerAccountRoutes(instance, deps);
+    registerSystemRoutes(instance, deps);
+  });
 
   return app;
 }
