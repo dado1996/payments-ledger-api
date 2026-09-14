@@ -28,6 +28,10 @@ const AccountEntriesResponseSchema = z.object({
   ),
 });
 
+const AccountEntriesNotFoundSchema = z.object({
+  message: z.string(),
+});
+
 const AccountCreateResponseSchema = z.object({
   id: z.uuid(),
   name: z.string(),
@@ -88,7 +92,7 @@ export function registerAccountRoutes(app: App, deps: AppDependencies) {
         params: AccountParamsSchema,
         response: {
           200: AccountEntriesResponseSchema,
-          404: AccountResponseErrorSchema,
+          404: AccountEntriesNotFoundSchema,
         },
       },
     },
