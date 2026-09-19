@@ -102,6 +102,22 @@ The service only accepts these currencies:
 
 5. The API will run on the configured host and port from `src/infra/config/index.ts` (default host is `0.0.0.0`, default port is `8000`).
 
+## OpenAPI and Swagger
+
+The API publishes an OpenAPI 3.1 specification and a Swagger UI when the application is running:
+
+- Swagger UI: `http://localhost:8000/docs`
+- OpenAPI JSON: `http://localhost:8000/docs/json`
+
+The specification is generated from the route schemas and includes the following tagged sections:
+
+- `health` — service health
+- `accounts` — account creation, details, and entries
+- `transfers` — transfer creation and lookup
+- `reconciliation` — system balance reconciliation
+
+The document metadata identifies the service as **Payments Ledger API**, version `1.0.0`, with support for `USD`, `EUR`, `GBP`, and `COP`.
+
 ## Scripts
 
 ```bash

@@ -6,7 +6,7 @@ import * as schema from "./schema.js";
 const client = postgres(config.DATABASE_URL, {
   connect_timeout: 30,
   max: 10,
-  ssl: config.DATABASE_SSL && "require",
+  ...(config.DATABASE_SSL ? { ssl: "require" } : {}),
 });
 
 export const db = drizzle(client, {
